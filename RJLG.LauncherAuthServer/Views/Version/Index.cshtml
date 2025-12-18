@@ -1,0 +1,60 @@
+﻿@{
+    ViewBag.Title = "Versions";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Saved Versions</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th></th>
+            <th>Version</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>                         
+        @if (ViewBag.Versions != null && ViewBag.Versions.Count > 0)
+        {
+            foreach (RJLG.LauncherAuthServer.Models.IntelliSEMVersion version in ViewBag.Versions)
+            {
+                <tr>
+                    <td>
+                        @if (!version.CurrentlyExistsOnDisk)
+                        {
+                            <span style="color: #ffc107; cursor:pointer;" title="Version @version.Version is missing on disk">
+                                &#9888; <!-- Unicode Warning Sign -->
+                            </span>
+                        }
+                    </td>
+                    <td>@version.Version</td>
+                    <td>
+                        <form action="~/Version/Delete" method="post" style="display:inline;">
+                            <input type="hidden" name="version" value="@version.Version" />
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="2">No versions found.</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<hr />
+
+<h3>Upload New Version (ZIP)</h3>
+<form action="~/Version/Upload" method="post" enctype="multipart/form-data">
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <label for="versionName">Version Name:</label>
+        <input type="text" name="versionName" id="versionName" required style="width: 180px;" />
+        <label for="zipFile">Select ZIP file:</label>
+        <input type="file" name="zipFile" id="zipFile" accept=".zip" required />
+        <button type="submit">Upload</button>
+    </div>
+</form>

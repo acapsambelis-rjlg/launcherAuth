@@ -1,0 +1,40 @@
+﻿@{
+    ViewBag.Title = "Login";
+}
+
+<main>
+    <div id="loginModal" class="modal-overlay" style="display:flex;">
+        <div class="modal-content">
+            <form method="post" action="~/Home/Login" class="entry-form">
+                <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px;">
+                    <h4 style="text-align: center; width: 100%;">Login:</h4>
+                    @if (ViewBag.ErrorMessage != null)
+                    {
+                        <div class="alert alert-danger" style="width: 100%; text-align: center;">
+                            @ViewBag.ErrorMessage
+                        </div>
+                    }
+                    <table style="width: 100%; border-collapse: separate; border-spacing: 0 8px;">
+                        <tr>
+                            <td style="padding-right: 12px; vertical-align: middle;">
+                                <label for="username">Username:</label>
+                            </td>
+                            <td style="width: 100%;">
+                                <input type="text" id="username" name="username" style="width: 100%;" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding-right: 12px; vertical-align: middle;">
+                                <label for="password" style="white-space: nowrap;">Password:</label>
+                            </td>
+                            <td style="width: 100%;">
+                                <input type="password" id="password" name="password" style="width: 100%;" autocomplete="off" />
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+    </div>
+</main>

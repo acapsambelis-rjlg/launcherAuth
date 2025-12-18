@@ -1,0 +1,53 @@
+﻿@{
+    ViewBag.Title = "Settings";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<main>
+    <h2>@User.Identity.Name</h2>
+    <p>Settings</p>
+
+    <button id="showChangePasswordModal" type="button">Change Password</button>
+    <div id="changePasswordModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" type="button" id="closeChangePasswordModal">&times;</button>
+            <form method="post" action="~/Home/ChangePassword" class="entry-form">
+                @Html.Partial("_ChangePassword")
+            </form>
+        </div>
+    </div>
+    <hr />
+    <button id="showAddAdminModal" type="button">Create Admin</button>
+    <div id="addAdminModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" type="button" id="closeAddAdminModal">&times;</button>
+            <form method="post" action="~/Home/CreateAdmin" class="entry-form">
+                @Html.Partial("_CreateAdmin")
+            </form>
+        </div>
+    </div>
+
+</main>
+<script>
+    document.getElementById('showAddAdminModal').onclick = function () {
+        document.getElementById('addAdminModal').style.display = 'flex';
+    };
+    document.getElementById('closeAddAdminModal').onclick = function () {
+        document.getElementById('addAdminModal').style.display = 'none';
+    };
+    document.getElementById('addAdminModal').onclick = function (e) {
+        if (e.target === this) {
+            this.lay = 'none';
+        }
+    };
+    document.getElementById('showChangePasswordModal').onclick = function () {
+        document.getElementById('changePasswordModal').style.display = 'flex';
+    };
+    document.getElementById('closeChangePasswordModal').onclick = function () {
+        document.getElementById('changePasswordModal').style.display = 'none';
+    };
+    document.getElementById('changePasswordModal').onclick = function (e) {
+        if (e.target === this) {
+            this.lay = 'none';
+        }
+    };
+</script> 

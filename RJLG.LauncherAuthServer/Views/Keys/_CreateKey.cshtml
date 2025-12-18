@@ -1,0 +1,30 @@
+﻿<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px;">
+    <h4 style="text-align: center; width: 100%;">New Key</h4>
+    <table style="width: 100%; border-collapse: separate; border-spacing: 0 8px;">
+        <tr>
+            <td style="padding-right: 12px; vertical-align: middle;">
+                <label for="loginKey">Login Key:</label>
+            </td>
+            <td style="width: 100%;">
+                <input type="text" id="loginKey" name="loginKey" style="width: 100%;" value="@RJLG.LauncherAuthServer.Models.LoginKey.GetRandomKey()"/>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding-right: 12px; vertical-align: middle;">
+                <label for="instanceCount" style="white-space: nowrap;">Instance Limit:</label>
+            </td>
+            <td style="width: 100%;">
+                <input type="number" id="instanceCount" name="instanceCount" style="width: 100%;" />
+            </td>
+        </tr>
+        <tr>
+            <td style="padding-right: 12px; vertical-align: middle;">
+                <label for="expiration">Expiration:</label>
+            </td>
+            <td style="width: 100%;">
+                <input type="date" id="expiration" name="expiration" style="width: 100%;" />
+            </td>
+        </tr>
+    </table>
+</div>
+<button type="submit">Save</button>

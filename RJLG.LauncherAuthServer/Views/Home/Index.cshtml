@@ -1,0 +1,41 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var statistics = ViewBag.UsageStatistics as Dictionary<string, RJLG.LauncherAuthServer.Models.UsageStatistic>;
+}
+
+<h2>Index</h2>
+
+@if (statistics != null && statistics.Count > 0)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Statistic</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (RJLG.LauncherAuthServer.Models.UsageStatistic stat in statistics.Values)
+            {
+                <tr>
+                    <td>@stat.Name</td>
+                    <td>
+                        @if (stat.Value != null)
+                        {
+                            @stat.Value
+                        }
+                        else
+                        {
+                            @stat.Count
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No statistics available.</p>
+}

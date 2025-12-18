@@ -1,0 +1,61 @@
+﻿<form method="post" action="~/Customers/Save" style="display: flex; flex-direction: column; max-width: 100%; gap: 12px;">
+    <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px;">
+        <h4 style="text-align: center; width: 100%;">New Key</h4>
+        <table style="width: 100%; border-collapse: separate; border-spacing: 0 8px;">
+            <tr>
+                <td style="padding-right: 12px; vertical-align: middle;">
+                    <label for="customerName">Customer Name:</label>
+                </td>
+                <td style="width: 100%;">
+                    <input type="text" id="customerName" name="customerName" style="width: 100%;" />
+                </td>
+            </tr>
+            <tr>
+                <td style="padding-right: 12px; vertical-align: middle;">
+                    <label for="versionId">Current Version:</label>
+                </td>
+                <td style="width: 100%;">
+                    <select id="versionId" name="versionId" style="width: 100%;">
+                        @foreach (var version in RJLG.LauncherAuthServer.Controllers.VersionController.Versions.OrderByDescending(v => v.Version))
+                        {
+                            <option value="@version.Version">@version.Version</option>
+                        }
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding-right: 12px; vertical-align: middle;">
+                    <label for="contactName">Contact Name:</label>
+                </td>
+                <td style="width: 100%;">
+                    <input type="text" id="contactName" name="contactName" style="width: 100%;" />
+                </td>
+            </tr>
+            <tr>
+                <td style="padding-right: 12px; vertical-align: middle;">
+                    <label for="contactEmail">Contact Email:</label>
+                </td>
+                <td style="width: 100%;">
+                    <input type="text" id="contactEmail" name="contactEmail" style="width: 100%;" />
+                </td>
+            </tr>
+            <tr>
+                <td style="padding-right: 12px; vertical-align: middle;">
+                    <label for="timezone">Timezone:</label>
+                </td>
+                <td style="width: 100%;">
+                    <input type="text" id="timezone" name="timezone" style="width: 100%;" />
+                </td>
+            </tr>
+            <tr>
+                <td style="padding-right: 12px; vertical-align: middle;">
+                    <label for="keysAllowed" style="white-space: nowrap;">Keys Allowed:</label>
+                </td>
+                <td style="width: 100%;">
+                    <input type="number" id="keysAllowed" name="keysAllowed" style="width: 100%;" />
+                </td>
+            </tr>
+        </table>
+    </div>
+    <button type="submit">Save</button>
+</form>

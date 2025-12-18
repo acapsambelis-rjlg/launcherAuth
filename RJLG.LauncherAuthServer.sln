@@ -1,0 +1,52 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36327.8
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RJLG.LauncherAuthServer", "RJLG.LauncherAuthServer\RJLG.LauncherAuthServer.csproj", "{F8490BC1-EBC3-4EEF-A898-194C30C28BFB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestLauncher", "TestLauncher\TestLauncher.csproj", "{DB3890B8-658E-4729-B765-7460A0F58041}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SNS.Data.DataSerializer", "SNS.Data.DataSerializer\SNS.Data.DataSerializer.csproj", "{9443C3AE-9F4F-4C95-B71E-7A8C8D688E40}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F8490BC1-EBC3-4EEF-A898-194C30C28BFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8490BC1-EBC3-4EEF-A898-194C30C28BFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8490BC1-EBC3-4EEF-A898-194C30C28BFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8490BC1-EBC3-4EEF-A898-194C30C28BFB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB3890B8-658E-4729-B765-7460A0F58041}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB3890B8-658E-4729-B765-7460A0F58041}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB3890B8-658E-4729-B765-7460A0F58041}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB3890B8-658E-4729-B765-7460A0F58041}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9443C3AE-9F4F-4C95-B71E-7A8C8D688E40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9443C3AE-9F4F-4C95-B71E-7A8C8D688E40}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9443C3AE-9F4F-4C95-B71E-7A8C8D688E40}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9443C3AE-9F4F-4C95-B71E-7A8C8D688E40}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0BD08F7A-6AFE-4156-B3E3-36F4C8880062}
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 4
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://dev.azure.com/acapsambelis
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = RJLG.LauncherAuthServer\\RJLG.LauncherAuthServer.csproj
+		SccProjectName1 = RJLG.LauncherAuthServer
+		SccLocalPath1 = RJLG.LauncherAuthServer
+		SccProjectUniqueName2 = TestLauncher\\TestLauncher.csproj
+		SccProjectName2 = TestLauncher
+		SccLocalPath2 = TestLauncher
+		SccProjectUniqueName3 = SNS.Data.DataSerializer\\SNS.Data.DataSerializer.csproj
+		SccProjectName3 = SNS.Data.DataSerializer
+		SccLocalPath3 = SNS.Data.DataSerializer
+	EndGlobalSection
+EndGlobal
