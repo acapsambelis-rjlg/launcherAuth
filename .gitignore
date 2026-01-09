@@ -416,3 +416,10 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Replit
+.replit.nix
+
+# App data
+App_Data/Versions/
+src/App_Data/

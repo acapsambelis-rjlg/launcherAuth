@@ -127,7 +127,9 @@
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Controllers\AuditController.cs" />
     <Compile Include="Controllers\CustomersController.cs" />
+    <Compile Include="Controllers\FilesController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\IntelliSEMLoginController.cs" />
     <Compile Include="Controllers\KeysController.cs" />
@@ -136,7 +138,9 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\AdminAccount.cs" />
+    <Compile Include="Models\AuditLog.cs" />
     <Compile Include="Models\CustomerAccount.cs" />
+    <Compile Include="Models\CustomerFile.cs" />
     <Compile Include="Models\IntelliSEMUser.cs" />
     <Compile Include="Models\IntelliSEMVersion.cs" />
     <Compile Include="Models\LoginKey.cs" />
@@ -193,8 +197,11 @@
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Views\Keys\_CreateKey.cshtml" />
+    <Content Include="Views\Keys\Index.cshtml" />
+    <Content Include="Views\Keys\Expiring.cshtml" />
     <Content Include="Views\Customers\Index.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
+    <Content Include="Views\Home\AuditLog.cshtml" />
     <Content Include="Views\Customers\_CreateCustomerAccount.cshtml" />
     <Content Include="Views\Customers\Details.cshtml" />
     <Content Include="Views\Version\Index.cshtml" />

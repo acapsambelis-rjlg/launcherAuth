@@ -1,4 +1,5 @@
 ﻿<form method="post" action="~/Customers/Save" style="display: flex; flex-direction: column; max-width: 100%; gap: 12px;">
+    @Html.AntiForgeryToken()
     <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px;">
         <h4 style="text-align: center; width: 100%;">New Key</h4>
         <table style="width: 100%; border-collapse: separate; border-spacing: 0 8px;">

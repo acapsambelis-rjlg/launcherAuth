@@ -70,25 +70,6 @@ namespace RJLG.LauncherAuthServer.Models
             Timezone = timezone;
         }
 
-        public int UniqueUsers()
-        {
-            if (loginKeys == null) return 0;
-
-            var uniqueMacs = new HashSet<string>();
-            foreach (var key in loginKeys)
-            {
-                var users = IntelliSEMUser.LoadAll(key.Key);
-                foreach (var user in users)
-                {
-                    if (!string.IsNullOrEmpty(user.MacAddress))
-                    {
-                        uniqueMacs.Add(user.MacAddress.ToUpperInvariant());
-                    }
-                }
-            }
-            return uniqueMacs.Count;
-        }
-
         public static List<CustomerAccount> LoadAll()
         {
             List<CustomerAccount> accounts = new List<CustomerAccount>();
@@ -100,5 +81,14 @@ namespace RJLG.LauncherAuthServer.Models
             }
             return accounts;
         }
+
+        #region Operators
+
+        public override string ToString()
+        {
+            return CustomerName;
+        }
+
+        #endregion
     }
 }

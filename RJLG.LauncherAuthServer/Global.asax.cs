@@ -30,6 +30,8 @@ namespace RJLG.LauncherAuthServer
 
             VersionController.Versions = Data<IntelliSEMVersion>.LoadAll().ToList();
             CustomersController.Customers = CustomerAccount.LoadAll();
+            IntelliSEMLoginController.Users = Data<IntelliSEMUser>.LoadAll().ToList();
+            KeysController.Keys = LoginKey.LoadAll(IntelliSEMLoginController.Users);
             HomeController.UsageStatistics = UsageStatistic.LoadAll(VersionController.Versions.Count, CustomersController.Customers.Count, CustomersController.Customers.Sum(c => c.LoginKeys.Count));
         }
     }

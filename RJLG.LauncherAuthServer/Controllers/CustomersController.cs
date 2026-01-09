@@ -1,4 +1,4 @@
-﻿using RJLG.LauncherAuthServer.Models;
+using RJLG.LauncherAuthServer.Models;
 using SNS.Data.DataSerializer.DataExtensions;
 using System;
 using System.Collections.Generic;
@@ -8,76 +8,131 @@ using System.Web.Mvc;
 
 namespace RJLG.LauncherAuthServer.Controllers
 {
+    [Authorize]
     public class CustomersController : Controller
     {
         public static List<CustomerAccount> Customers = new List<CustomerAccount>();
 
-        // GET: Customer
-        public ActionResult Index()
+        private string GetIpAddress()
         {
-            ViewBag.Customers = Customers;
+            string ip = Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
+            if (string.IsNullOrEmpty(ip))
+            {
+                ip = Request.ServerVariables["REMOTE_ADDR"];
+            }
+            return ip ?? "Unknown";
+        }
+
+        public ActionResult Index(string search = null)
+        {
+            var customers = Customers;
+            
+            if (!string.IsNullOrEmpty(search))
+            {
+                customers = customers.Where(c => 
+                    c.CustomerName.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    (c.ContactName != null && c.ContactName.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                    (c.ContactEmail != null && c.ContactEmail.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                    (c.CurrentVersion != null && c.CurrentVersion.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0)
+                ).ToList();
+                ViewBag.Search = search;
+            }
+            
+            ViewBag.Customers = customers.OrderBy(c => c.CustomerName).ToList();
             return View();
         }
 
-        // POST: /Customers/Save
         [HttpPost]
-        [Authorize]
-        public ActionResult Save(string customerName, string version, int? keysAllowed, string contactName, string contactEmail, string timezone)
+        [ValidateAntiForgeryToken]
+        public ActionResult Save(string customerName, string versionId, int? keysAllowed, string contactName, string contactEmail, string timezone)
         {
             if (!string.IsNullOrEmpty(customerName))
             {
-                var intelliSEMVersion = VersionController.Versions.FirstOrDefault(v => v.Version.Equals(version));
-                Customers.Add(new CustomerAccount(customerName, intelliSEMVersion, contactName, contactEmail, timezone, keysAllowed));
+                var intelliSEMVersion = VersionController.Versions.FirstOrDefault(v => v.Version.Equals(versionId));
+                var customer = new CustomerAccount(customerName, intelliSEMVersion, contactName, contactEmail, timezone, keysAllowed);
+                customer.Save();
+                
+                AuditLog.Log(
+                    User.Identity.Name,
+                    "CreateCustomer",
+                    "CustomerAccount",
+                    customer.ID.ToString(),
+                    $"Created customer '{customerName}'",
+                    GetIpAddress()
+                );
+                
+                TempData["Message"] = "Customer created successfully!";
             }
-            TempData["Message"] = "Customer saved!";
-            IncrementCustomerUsageStatistic();
             return RedirectToAction("Index");
         }
 
-        // POST: /Customers/Remove
         [HttpPost]
-        [Authorize]
-        public ActionResult Remove(int keyId)
+        [ValidateAntiForgeryToken]
+        public ActionResult Remove(int customerId)
         {
-            var item = Customers.FirstOrDefault(k => k.ID == keyId);
+            var item = Customers.FirstOrDefault(k => k.ID == customerId);
             if (item != null)
             {
-                Customers.Remove(item);
+                AuditLog.Log(
+                    User.Identity.Name,
+                    "DeleteCustomer",
+                    "CustomerAccount",
+                    customerId.ToString(),
+                    $"Deleted customer '{item.CustomerName}'",
+                    GetIpAddress()
+                );
+                
+                item.Delete();
+                TempData["Message"] = "Customer deleted successfully.";
             }
-            TempData["Message"] = "Key removed!";
             return RedirectToAction("Index");
         }
 
-        // GET: /Customers/Details
         [HttpGet]
-        [Authorize]
         public ActionResult Details(int? customerId)
         {
             ViewBag.AvailableVersions = VersionController.Versions;
             if (!customerId.HasValue)
             {
-                return Redirect("Index");
+                return RedirectToAction("Index");
             }
             var customer = Customers.FirstOrDefault(c => c.ID == customerId);
+            if (customer == null)
+            {
+                return HttpNotFound();
+            }
+            
+            ViewBag.CustomerFiles = CustomerFile.LoadByCustomerId(customerId.Value);
             return View(customer);
         }
 
-        // POST: /Customers/UpdateVersion
         [HttpPost]
-        [Authorize]
+        [ValidateAntiForgeryToken]
         public ActionResult UpdateVersion(int id, string currentVersion)
         {
             var customer = Customers.FirstOrDefault(c => c.ID == id);
             if (customer != null)
             {
+                var oldVersion = customer.CurrentVersion;
                 customer.CurrentVersion = currentVersion;
-                customer.Save();
+                customer.Update();
+                
+                AuditLog.Log(
+                    User.Identity.Name,
+                    "UpdateVersion",
+                    "CustomerAccount",
+                    id.ToString(),
+                    $"Updated version from '{oldVersion}' to '{currentVersion}' for customer '{customer.CustomerName}'",
+                    GetIpAddress()
+                );
+                
+                TempData["Message"] = "Version updated successfully.";
             }
             return RedirectToAction("Details", new { customerId = id });
         }
 
-        // POST: /Customers/UpdateContact
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public ActionResult UpdateContact(int ID, string ContactName, string ContactEmail, string Timezone, string Notes)
         {
             var customer = Customers.FirstOrDefault(c => c.ID == ID);
@@ -88,13 +143,19 @@ namespace RJLG.LauncherAuthServer.Controllers
                 customer.Timezone = Timezone;
                 customer.Notes = Notes;
                 customer.Update();
+                
+                AuditLog.Log(
+                    User.Identity.Name,
+                    "UpdateCustomer",
+                    "CustomerAccount",
+                    ID.ToString(),
+                    $"Updated contact info for customer '{customer.CustomerName}'",
+                    GetIpAddress()
+                );
+                
+                TempData["Message"] = "Contact info updated successfully.";
             }
             return RedirectToAction("Details", new { customerId = ID });
-        }
-
-        private void IncrementCustomerUsageStatistic()
-        {
-            HomeController.UsageStatistics["Total Customers"].Count += 1;
         }
     }
 }

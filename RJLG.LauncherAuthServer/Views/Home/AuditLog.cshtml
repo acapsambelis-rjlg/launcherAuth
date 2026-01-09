@@ -1,0 +1,77 @@
+@{
+    ViewBag.Title = "Audit Log";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var auditLogs = ViewBag.AuditLogs as List<RJLG.LauncherAuthServer.Models.AuditLog>;
+    var actions = ViewBag.Actions as List<string>;
+    var filter = ViewBag.Filter as string;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="page-header mb-0"><i class="fas fa-history me-2"></i> Audit Log</h2>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Filter by Action</label>
+                <select name="filter" class="form-select">
+                    <option value="">All Actions</option>
+                    @if (actions != null)
+                    {
+                        foreach (var action in actions)
+                        {
+                            <option value="@action" @(filter == action ? "selected" : "")>@action</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Entity</th>
+                    <th>Details</th>
+                    <th>IP Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (auditLogs != null && auditLogs.Count > 0)
+                {
+                    foreach (var log in auditLogs)
+                    {
+                        <tr>
+                            <td>@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                            <td>@log.Username</td>
+                            <td><span class="badge bg-secondary">@log.Action</span></td>
+                            <td>@log.EntityType @log.EntityId</td>
+                            <td>@log.Details</td>
+                            <td><small class="text-muted">@log.IpAddress</small></td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">No audit logs found.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="@Url.Action("Index", "Home")" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+</div>

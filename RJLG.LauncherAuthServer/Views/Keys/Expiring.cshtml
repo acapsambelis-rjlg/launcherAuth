@@ -1,0 +1,78 @@
+@model IEnumerable<RJLG.LauncherAuthServer.Models.LoginKey>
+@{
+    ViewBag.Title = "Expiring Keys";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var customers = ViewBag.Customers as List<RJLG.LauncherAuthServer.Models.CustomerAccount>;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="page-header mb-0"><i class="fas fa-exclamation-triangle me-2 text-warning"></i> Keys Expiring Within 30 Days</h2>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Key</th>
+                    <th>Customer</th>
+                    <th>Expiration Date</th>
+                    <th>Days Left</th>
+                    <th>Instance Limit</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var key in Model)
+                    {
+                        var customer = customers?.FirstOrDefault(c => c.ID == key.CustomerAccount);
+                        var daysLeft = key.Expiration.HasValue ? (key.Expiration.Value - DateTime.UtcNow).Days : 0;
+                        var rowClass = daysLeft <= 7 ? "table-danger" : daysLeft <= 14 ? "table-warning" : "";
+                        
+                        <tr class="@rowClass">
+                            <td style="font-family: monospace; font-size: 0.85rem;">@key.Key</td>
+                            <td>
+                                @if (customer != null)
+                                {
+                                    <a href="@Url.Action("Details", "Customers", new { customerId = customer.ID })">@customer.CustomerName</a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Unknown</span>
+                                }
+                            </td>
+                            <td>@(key.Expiration?.ToString("MMM dd, yyyy"))</td>
+                            <td>
+                                <span class="badge @(daysLeft <= 7 ? "bg-danger" : daysLeft <= 14 ? "bg-warning text-dark" : "bg-secondary")">
+                                    @daysLeft days
+                                </span>
+                            </td>
+                            <td>
+                                @if (key.InstanceLimit.HasValue)
+                                {
+                                    @key.InstanceLimit
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Unlimited</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">No keys expiring within 30 days.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="@Url.Action("Index", "Home")" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+    <a href="@Url.Action("Index", "Keys")" class="btn btn-outline-primary ms-2"><i class="fas fa-key me-1"></i> View All Keys</a>
+</div>

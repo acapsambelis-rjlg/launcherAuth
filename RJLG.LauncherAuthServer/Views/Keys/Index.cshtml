@@ -1,0 +1,100 @@
+@model IEnumerable<RJLG.LauncherAuthServer.Models.LoginKey>
+@{
+    ViewBag.Title = "All Login Keys";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var customers = ViewBag.Customers as List<RJLG.LauncherAuthServer.Models.CustomerAccount>;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="page-header mb-0"><i class="fas fa-key me-2"></i> All Login Keys</h2>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Key</th>
+                    <th>Customer</th>
+                    <th>Instance Limit</th>
+                    <th>Expiration</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var key in Model)
+                    {
+                        var customer = customers?.FirstOrDefault(c => c.ID == key.CustomerAccount);
+                        var isExpired = key.Expiration.HasValue && key.Expiration.Value < DateTime.UtcNow;
+                        var isExpiringSoon = key.Expiration.HasValue && !isExpired && key.Expiration.Value <= DateTime.UtcNow.AddDays(30);
+                        var daysLeft = key.Expiration.HasValue ? (key.Expiration.Value - DateTime.UtcNow).Days : 0;
+                        
+                        <tr class="@(isExpired ? "table-secondary" : isExpiringSoon && daysLeft <= 7 ? "table-danger" : isExpiringSoon && daysLeft <= 14 ? "table-warning" : "")">
+                            <td style="font-family: monospace; font-size: 0.85rem;">
+                                @key.Key
+                            </td>
+                            <td>
+                                @if (customer != null)
+                                {
+                                    <a href="@Url.Action("Details", "Customers", new { customerId = customer.ID })">@customer.CustomerName</a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Unknown</span>
+                                }
+                            </td>
+                            <td>
+                                @if (key.InstanceLimit.HasValue)
+                                {
+                                    <span>@key.InstanceLimit</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Unlimited</span>
+                                }
+                            </td>
+                            <td>
+                                @if (key.Expiration.HasValue)
+                                {
+                                    @key.Expiration.Value.ToString("MMM dd, yyyy")
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Never</span>
+                                }
+                            </td>
+                            <td>
+                                @if (isExpired)
+                                {
+                                    <span class="badge bg-secondary">Expired</span>
+                                }
+                                else if (isExpiringSoon)
+                                {
+                                    <span class="badge @(daysLeft <= 7 ? "bg-danger" : "bg-warning text-dark")">@daysLeft days left</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                            </td>
+                            <td>@key.CreatedAt.ToString("MMM dd, yyyy")</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">No login keys found.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="@Url.Action("Index", "Home")" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+</div>

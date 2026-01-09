@@ -10,37 +10,61 @@ namespace RJLG.LauncherAuthServer.Models
     [DataClass("IntelliSEMUser")]
     public class IntelliSEMUser : IGenericDataObject<IntelliSEMUser>
     {
-        public static IntelliSEMUser LoadOne(string macAddress)
-        {
-            IntelliSEMUser user = Data<IntelliSEMUser>.Load(u => u.MacAddress == macAddress);
-            return user;
-        }
-        public static IntelliSEMUser[] LoadAll(string key = "")
-        {
-            IntelliSEMUser[] users = Data<IntelliSEMUser>.LoadMany(u => u.LoginKey == key);
-            return users;
-        }
 
         [DataProperty("MacAddress", Key = true)]
-        public string MacAddress { get; set; }
+        public string HardwareFingerprint { get; set; }
         [DataProperty("IPAddress")]
         public string IPAddress { get; set; }
         [DataProperty("LastLogin")]
         public DateTime LastLogin { get; set; }
         [DataProperty("LoginKey")]
-        public string LoginKey { get; set; }
+        public string LoginKeyID { get; set; }
+
 
         private bool wasLoaded;
         public bool WasLoaded { get => wasLoaded; set => wasLoaded = value; }
 
         public IntelliSEMUser() { }
 
-        public IntelliSEMUser(string macAddress, string ipAddress, LoginKey key)
+        public IntelliSEMUser(string fingerprint, string ipAddress)
         {
-            MacAddress = macAddress;
+            HardwareFingerprint = fingerprint;
             IPAddress = ipAddress;
             LastLogin = DateTime.Now;
-            LoginKey = key.Key;
         }
+
+        #region Operators
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as IntelliSEMUser);
+        }
+
+        public bool Equals(IntelliSEMUser other)
+        {
+            return !(other is null) &&
+                   HardwareFingerprint == other.HardwareFingerprint;
+        }
+
+        public override int GetHashCode()
+        {
+            int hashCode = -583616143;
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(HardwareFingerprint);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(IPAddress);
+            hashCode = hashCode * -1521134295 + LastLogin.GetHashCode();
+            return hashCode;
+        }
+
+        public static bool operator ==(IntelliSEMUser left, IntelliSEMUser right)
+        {
+            return EqualityComparer<IntelliSEMUser>.Default.Equals(left, right);
+        }
+
+        public static bool operator !=(IntelliSEMUser left, IntelliSEMUser right)
+        {
+            return !(left == right);
+        }
+
+        #endregion
     }
 }

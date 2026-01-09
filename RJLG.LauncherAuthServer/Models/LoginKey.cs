@@ -20,7 +20,8 @@ namespace RJLG.LauncherAuthServer.Models
         private DateTime createdAt;
         private DateTime? expiration;
         private int? instanceLimit;
-        private int? customerAccount;
+        private int? customerAccountID;
+        private List<IntelliSEMUser> associatedUsers = new List<IntelliSEMUser>();
 
         [DataProperty("Key", Key = true)]
         public string Key { get => key; set => key = value; }
@@ -28,16 +29,19 @@ namespace RJLG.LauncherAuthServer.Models
         public DateTime CreatedAt { get => createdAt; set => createdAt = value; }
         [DataProperty("Expiration")]
         public DateTime? Expiration { get => expiration; set => expiration = value; }
+        [DataProperty("InstanceLimit")]
         public int? InstanceLimit { get => instanceLimit; set => instanceLimit = value; }
         [DataProperty("CustomerAccount")]
-        public int? CustomerAccount { get => customerAccount; set => customerAccount = value; }
+        public int? CustomerAccountID { get => customerAccountID; set => customerAccountID = value; }
+
+        public List<IntelliSEMUser> AssociatedUsers
+        {
+            get { return associatedUsers; }
+        }
+
         public int AssociatedUsersCount
         {
-            get
-            {
-                var users = IntelliSEMUser.LoadAll(key);
-                return users.Length;
-            }
+            get { return AssociatedUsers.Count; }
         }
 
         public int ID { get => id; set => id = value; }
@@ -53,37 +57,44 @@ namespace RJLG.LauncherAuthServer.Models
         public LoginKey(string key, int? customerId, int? instanceLimit, DateTime? expiration)
         {
             this.key = key;
-            this.customerAccount = customerId;
+            this.customerAccountID = customerId;
             createdAt = DateTime.Now;
             this.instanceLimit = instanceLimit;
             this.expiration = expiration;
         }
 
-        public bool IsValid()
+        public bool IsValid(string fingerprint)
         {
             if (expiration.HasValue && DateTime.Now > expiration.Value)
             {
                 return false;
             }
-            //if (instanceLimit.HasValue)
-            //{
-            //    var uniqueMacCount = associatedUsers
-            //        .Select(u => u.MacAddress)
-            //        .Where(mac => !string.IsNullOrEmpty(mac))
-            //        .Distinct(StringComparer.OrdinalIgnoreCase)
-            //        .Count();
-            //    return uniqueMacCount < instanceLimit.Value;
-            //}
+            if (instanceLimit.HasValue)
+            {
+                var associatedUser = associatedUsers.Where(a => a.HardwareFingerprint.Equals(fingerprint, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+                if (associatedUser != null)
+                {
+                    return true;
+                }
+                else
+                {
+                    return associatedUsers.Count < instanceLimit.Value;  // is there room for another user?
+                }
+            }
+
             return true;
         }
 
-        public static LoginKey[] LoadAll()
+        public static List<LoginKey> LoadAll(List<IntelliSEMUser> users)
         {
+            var loginKeys = new List<LoginKey>();
             var loginKeysRaw = Data<LoginKey>.LoadAll();
-            //var usersRaw = Data<IntelliSEMUser>.LoadAll();
-
-
-            return loginKeysRaw;
+            foreach (var loginKey in loginKeysRaw)
+            {
+                loginKey.associatedUsers = Data<IntelliSEMUser>.LoadManyFromProc("GetUsersForLoginKeys", new string[] { "LoginKey" }, new object[] { loginKey.ID }).ToList();
+                loginKeys.Add(loginKey);
+            }
+            return loginKeys;
         }
 
         #region Overrides

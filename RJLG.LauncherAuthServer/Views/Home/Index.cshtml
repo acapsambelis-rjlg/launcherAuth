@@ -1,41 +1,100 @@
-﻿@{
-    ViewBag.Title = "Index";
+@{
+    ViewBag.Title = "Dashboard";
     Layout = "~/Views/Shared/_Layout.cshtml";
-    var statistics = ViewBag.UsageStatistics as Dictionary<string, RJLG.LauncherAuthServer.Models.UsageStatistic>;
+    var expiringKeys = ViewBag.ExpiringKeys as List<RJLG.LauncherAuthServer.Models.LoginKey>;
+    var recentAuditLogs = ViewBag.RecentAuditLogs as List<RJLG.LauncherAuthServer.Models.AuditLog>;
+    var customers = ViewBag.Customers as List<RJLG.LauncherAuthServer.Models.CustomerAccount>;
 }
 
-<h2>Index</h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="page-header mb-0">Dashboard</h2>
+</div>
 
-@if (statistics != null && statistics.Count > 0)
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <a href="@Url.Action("Index", "Customers")" class="stats-card-link">
+            <div class="stats-card clickable">
+                <div class="stat-value">@ViewBag.CustomerCount</div>
+                <div class="stat-label"><i class="fas fa-users me-1"></i> Customers</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="@Url.Action("Index", "Keys")" class="stats-card-link">
+            <div class="stats-card clickable">
+                <div class="stat-value">@ViewBag.KeyCount</div>
+                <div class="stat-label"><i class="fas fa-key me-1"></i> Login Keys</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="@Url.Action("Index", "Version")" class="stats-card-link">
+            <div class="stats-card clickable">
+                <div class="stat-value">@ViewBag.VersionCount</div>
+                <div class="stat-label"><i class="fas fa-box me-1"></i> Versions</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="@Url.Action("AuditLog", "Home", new { filter = "Login" })" class="stats-card-link">
+            <div class="stats-card clickable">
+                <div class="stat-value">@(((int?)ViewBag.LoginCount ?? 0).ToString("N0"))</div>
+                <div class="stat-label"><i class="fas fa-sign-in-alt me-1"></i> Total Logins</div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <a href="@Url.Action("AuditLog", "Home")" class="stats-card-link">
+            <div class="stats-card clickable">
+                <div class="stat-value">@ViewBag.DataTransferred</div>
+                <div class="stat-label"><i class="fas fa-download me-1"></i> Data Transferred</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-6">
+        <a href="@Url.Action("Expiring", "Keys")" class="stats-card-link">
+            <div class="stats-card clickable">
+                <div class="stat-value">@ViewBag.ExpiringKeyCount</div>
+                <div class="stat-label text-warning"><i class="fas fa-exclamation-triangle me-1"></i> Keys Expiring Soon (30 days)</div>
+            </div>
+        </a>
+    </div>
+</div>
+
+@if (expiringKeys != null && expiringKeys.Count > 0)
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Statistic</th>
-                <th>Value</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (RJLG.LauncherAuthServer.Models.UsageStatistic stat in statistics.Values)
-            {
-                <tr>
-                    <td>@stat.Name</td>
-                    <td>
-                        @if (stat.Value != null)
-                        {
-                            @stat.Value
-                        }
-                        else
-                        {
-                            @stat.Count
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-else
-{
-    <p>No statistics available.</p>
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-exclamation-triangle me-2"></i> Keys Expiring Within 30 Days
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        <th>Customer</th>
+                        <th>Expiration</th>
+                        <th>Days Left</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var key in expiringKeys)
+                    {
+                        var daysLeft = key.Expiration.HasValue ? (key.Expiration.Value - DateTime.UtcNow).Days : 0;
+                        var rowClass = daysLeft <= 7 ? "table-danger" : daysLeft <= 14 ? "table-warning" : "";
+                        var customer = customers?.FirstOrDefault(c => c.ID == key.CustomerAccountID);
+                        <tr class="@rowClass">
+                            <td style="font-family: monospace; font-size: 0.85rem;">@key.Key</td>
+                            <td>@(customer?.CustomerName ?? "Unknown")</td>
+                            <td>@(key.Expiration?.ToString("MMM dd, yyyy"))</td>
+                            <td><span class="badge @(daysLeft <= 7 ? "bg-danger" : daysLeft <= 14 ? "bg-warning text-dark" : "bg-secondary")">@daysLeft days</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
 }

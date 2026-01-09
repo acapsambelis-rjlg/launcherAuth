@@ -1,60 +1,249 @@
-﻿@{
+@{
     ViewBag.Title = "Versions";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Saved Versions</h2>
-
-<table class="table">
-    <thead>
-        <tr>
-            <th></th>
-            <th>Version</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>                         
-        @if (ViewBag.Versions != null && ViewBag.Versions.Count > 0)
-        {
-            foreach (RJLG.LauncherAuthServer.Models.IntelliSEMVersion version in ViewBag.Versions)
-            {
-                <tr>
-                    <td>
-                        @if (!version.CurrentlyExistsOnDisk)
-                        {
-                            <span style="color: #ffc107; cursor:pointer;" title="Version @version.Version is missing on disk">
-                                &#9888; <!-- Unicode Warning Sign -->
-                            </span>
-                        }
-                    </td>
-                    <td>@version.Version</td>
-                    <td>
-                        <form action="~/Version/Delete" method="post" style="display:inline;">
-                            <input type="hidden" name="version" value="@version.Version" />
-                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-            }
-        }
-        else
-        {
-            <tr>
-                <td colspan="2">No versions found.</td>
-            </tr>
-        }
-    </tbody>
-</table>
-
-<hr />
-
-<h3>Upload New Version (ZIP)</h3>
-<form action="~/Version/Upload" method="post" enctype="multipart/form-data">
-    <div style="display: flex; align-items: center; gap: 10px;">
-        <label for="versionName">Version Name:</label>
-        <input type="text" name="versionName" id="versionName" required style="width: 180px;" />
-        <label for="zipFile">Select ZIP file:</label>
-        <input type="file" name="zipFile" id="zipFile" accept=".zip" required />
-        <button type="submit">Upload</button>
+<main>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="page-header mb-0">Software Versions</h2>
+        <button id="showUploadModal" type="button" class="btn btn-primary">
+            <i class="fas fa-upload me-1"></i> Upload Version
+        </button>
     </div>
-</form>
+
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-box me-2"></i> Saved Versions
+        </div>
+        <div class="card-body p-0">
+            @if (ViewBag.Versions != null && ViewBag.Versions.Count > 0)
+            {
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Version</th>
+                            <th>File Path</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (RJLG.LauncherAuthServer.Models.IntelliSEMVersion version in ViewBag.Versions)
+                        {
+                            <tr>
+                                <td>
+                                    @if (version.CurrentlyExistsOnDisk)
+                                    {
+                                        <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i> Available</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark"><i class="fas fa-exclamation-triangle me-1"></i> Missing</span>
+                                    }
+                                </td>
+                                <td><code>@version.Version</code></td>
+                                <td style="font-size: 0.85rem; color: #666;">@version.StoredPath</td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDeleteVersion('@version.Version.Replace("'", "\\'")') ">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="p-4 text-center text-muted">
+                    <i class="fas fa-info-circle me-2"></i> No versions uploaded yet. Click "Upload Version" to add one.
+                </div>
+            }
+        </div>
+    </div>
+
+    <div id="uploadModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div class="modal-content" style="background: white; padding: 30px; border-radius: 8px; max-width: 500px; width: 90%;">
+            <button class="modal-close" type="button" id="closeUploadModal" style="position: absolute; top: 10px; right: 15px; border: none; background: none; font-size: 24px; cursor: pointer;">&times;</button>
+            <h4><i class="fas fa-upload me-2"></i> Upload New Version</h4>
+            <form id="uploadForm" class="entry-form">
+                @Html.AntiForgeryToken()
+                <div class="mb-3">
+                    <label for="versionName" class="form-label">Version Name</label>
+                    <input type="text" name="versionName" id="versionName" class="form-control" required placeholder="e.g., 2.1.0" />
+                </div>
+                <div class="mb-3">
+                    <label for="zipFile" class="form-label">ZIP File</label>
+                    <input type="file" name="zipFile" id="zipFile" accept=".zip" class="form-control" required />
+                    <small class="text-muted">Only .zip files are accepted</small>
+                </div>
+                <div id="uploadProgress" class="mb-3" style="display: none;">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span id="uploadStatus">Uploading...</span>
+                        <span id="uploadPercent">0%</span>
+                    </div>
+                    <div class="progress" style="height: 20px;">
+                        <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <small id="uploadDetails" class="text-muted mt-1 d-block"></small>
+                </div>
+                <button type="submit" id="uploadBtn" class="btn btn-primary w-100">
+                    <i class="fas fa-upload me-1"></i> Upload
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="deleteVersionModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div class="modal-content" style="background: white; padding: 30px; border-radius: 8px; max-width: 400px; width: 90%;">
+            <h4><i class="fas fa-exclamation-triangle text-danger me-2"></i> Confirm Delete</h4>
+            <p>Are you sure you want to delete version <strong id="deleteVersionName"></strong>?</p>
+            <p class="text-muted small">This will also remove the file from the server.</p>
+            <form method="post" action="@Url.Action("Delete", "Version")" id="deleteVersionForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="version" id="deleteVersionValue" />
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-secondary" onclick="closeDeleteVersionModal()">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+<script>
+    document.getElementById('showUploadModal').onclick = function () {
+        document.getElementById('uploadModal').style.display = 'flex';
+    };
+    document.getElementById('closeUploadModal').onclick = function () {
+        document.getElementById('uploadModal').style.display = 'none';
+    };
+    document.getElementById('uploadModal').onclick = function (e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+        }
+    };
+
+    function confirmDeleteVersion(version) {
+        document.getElementById('deleteVersionValue').value = version;
+        document.getElementById('deleteVersionName').textContent = version;
+        document.getElementById('deleteVersionModal').style.display = 'flex';
+    }
+
+    function closeDeleteVersionModal() {
+        document.getElementById('deleteVersionModal').style.display = 'none';
+    }
+
+    document.getElementById('deleteVersionModal').onclick = function (e) {
+        if (e.target === this) {
+            closeDeleteVersionModal();
+        }
+    };
+
+    function formatBytes(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        var k = 1024;
+        var sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        var i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    document.getElementById('uploadForm').onsubmit = function(e) {
+        e.preventDefault();
+        
+        var versionName = document.getElementById('versionName').value;
+        var zipFile = document.getElementById('zipFile').files[0];
+        var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        
+        if (!versionName || !zipFile) {
+            alert('Please fill in all fields');
+            return;
+        }
+
+        if (!zipFile.name.toLowerCase().endsWith('.zip')) {
+            alert('Please upload a valid ZIP file');
+            return;
+        }
+
+        var formData = new FormData();
+        formData.append('versionName', versionName);
+        formData.append('zipFile', zipFile);
+        formData.append('__RequestVerificationToken', token);
+
+        var xhr = new XMLHttpRequest();
+        var startTime = Date.now();
+        
+        document.getElementById('uploadProgress').style.display = 'block';
+        document.getElementById('uploadBtn').disabled = true;
+        document.getElementById('uploadBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Uploading...';
+        document.getElementById('versionName').disabled = true;
+        document.getElementById('zipFile').disabled = true;
+        document.getElementById('closeUploadModal').style.display = 'none';
+
+        xhr.upload.onprogress = function(event) {
+            if (event.lengthComputable) {
+                var percent = Math.round((event.loaded / event.total) * 100);
+                var elapsed = (Date.now() - startTime) / 1000;
+                var speed = event.loaded / elapsed;
+                var remaining = (event.total - event.loaded) / speed;
+                
+                document.getElementById('progressBar').style.width = percent + '%';
+                document.getElementById('progressBar').setAttribute('aria-valuenow', percent);
+                document.getElementById('uploadPercent').textContent = percent + '%';
+                
+                var details = formatBytes(event.loaded) + ' / ' + formatBytes(event.total);
+                if (elapsed > 1) {
+                    details += ' - ' + formatBytes(speed) + '/s';
+                    if (remaining > 0 && remaining < 3600) {
+                        var mins = Math.floor(remaining / 60);
+                        var secs = Math.floor(remaining % 60);
+                        if (mins > 0) {
+                            details += ' - ~' + mins + 'm ' + secs + 's remaining';
+                        } else {
+                            details += ' - ~' + secs + 's remaining';
+                        }
+                    }
+                }
+                document.getElementById('uploadDetails').textContent = details;
+            }
+        };
+
+        xhr.onload = function() {
+            if (xhr.status === 200 || xhr.status === 302) {
+                document.getElementById('uploadStatus').textContent = 'Upload complete!';
+                document.getElementById('progressBar').className = 'progress-bar bg-success';
+                setTimeout(function() {
+                    window.location.reload();
+                }, 500);
+            } else {
+                document.getElementById('uploadStatus').textContent = 'Upload failed';
+                document.getElementById('progressBar').className = 'progress-bar bg-danger';
+                resetUploadForm();
+            }
+        };
+
+        xhr.onerror = function() {
+            document.getElementById('uploadStatus').textContent = 'Upload failed - network error';
+            document.getElementById('progressBar').className = 'progress-bar bg-danger';
+            resetUploadForm();
+        };
+
+        xhr.open('POST', '@Url.Action("Upload", "Version")', true);
+        xhr.send(formData);
+    };
+
+    function resetUploadForm() {
+        setTimeout(function() {
+            document.getElementById('uploadBtn').disabled = false;
+            document.getElementById('uploadBtn').innerHTML = '<i class="fas fa-upload me-1"></i> Upload';
+            document.getElementById('versionName').disabled = false;
+            document.getElementById('zipFile').disabled = false;
+            document.getElementById('closeUploadModal').style.display = 'block';
+            document.getElementById('uploadProgress').style.display = 'none';
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('progressBar').className = 'progress-bar progress-bar-striped progress-bar-animated';
+        }, 2000);
+    }
+</script>
+}

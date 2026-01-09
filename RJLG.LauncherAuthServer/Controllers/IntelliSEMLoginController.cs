@@ -15,8 +15,11 @@ namespace RJLG.LauncherAuthServer.Controllers
     [AllowAnonymous]
     public class IntelliSEMLoginController : Controller
     {
+        public static List<IntelliSEMUser> Users = new List<IntelliSEMUser>();
+
+
         [HttpPost]
-        public JsonResult ValidateKey(string loginKey, string macAddress)
+        public JsonResult ValidateKey(string loginKey, string fingerprint)
         {
             // Log user's IP address
             string userIp = Request.UserHostAddress;
@@ -27,9 +30,9 @@ namespace RJLG.LauncherAuthServer.Controllers
                 return Json(new { success = false, message = "Key is required." });
             }
 
-            if (IsValidKey(loginKey, out var key))
+            if (IsValidKey(loginKey, fingerprint, out var key))
             {
-                LogUser(key, macAddress);
+                AssignUserToKey(key, fingerprint);
                 IncrementLoginUsageStatistic();
                 return Json(new { success = true, message = "Key is valid.", version = GetVersion(key) });
             }
@@ -39,19 +42,22 @@ namespace RJLG.LauncherAuthServer.Controllers
             }
         }
 
-        private void LogUser(LoginKey key, string mac)
+        private void AssignUserToKey(LoginKey key, string fingerprint)
         {
-            var existingUser = IntelliSEMUser.LoadOne(mac);
+            var existingUser = Users.FirstOrDefault(u => u.HardwareFingerprint == fingerprint);
             if (existingUser != null)
             {
                 var now = DateTime.Now;
                 existingUser.LastLogin = now;
                 existingUser.Update();
+                if (!key.AssociatedUsers.Contains(existingUser))
+                    key.AssociatedUsers.Add(existingUser);
             }
             else
             {
-                var newUser = new IntelliSEMUser(mac, "", key);
+                var newUser = new IntelliSEMUser(fingerprint, "");
                 newUser.Save();
+                key.AssociatedUsers.Add(newUser);
             }
 
             key.Update();
@@ -64,9 +70,9 @@ namespace RJLG.LauncherAuthServer.Controllers
         }
 
         [HttpPost]
-        public ActionResult DownloadVersionZip(string version, string loginKey)
+        public ActionResult DownloadVersionZip(string version, string fingerprint, string loginKey)
         {
-            if (!IsValidKey(loginKey, out var key))
+            if (!IsValidKey(loginKey, fingerprint, out var key))
             {
                 return new HttpStatusCodeResult(403, "Invalid login key.");
             }
@@ -107,12 +113,11 @@ namespace RJLG.LauncherAuthServer.Controllers
             stat.Update();
         }
 
-        private bool IsValidKey(string loginKey, out LoginKey key)
+        private bool IsValidKey(string loginKey, string fingerprint, out LoginKey key)
         {
             key = null;
             if (string.IsNullOrEmpty(loginKey))
             {
-
                 return false;
             }
             foreach (CustomerAccount customer in CustomersController.Customers)
@@ -121,7 +126,7 @@ namespace RJLG.LauncherAuthServer.Controllers
                 if (customerKey != null)
                 {
                     key = customerKey; // Set out parameter
-                    return customerKey.IsValid();
+                    return customerKey.IsValid(fingerprint);
                 }
             }
 
@@ -130,9 +135,9 @@ namespace RJLG.LauncherAuthServer.Controllers
 
         private string GetVersion(LoginKey key)
         {
-            if (key.CustomerAccount.HasValue)
+            if (key.CustomerAccountID.HasValue)
             {
-                var customer = CustomersController.Customers.FirstOrDefault(c => c.ID == key.CustomerAccount.Value);
+                var customer = CustomersController.Customers.FirstOrDefault(c => c.ID == key.CustomerAccountID.Value);
                 if (customer != null)
                 {
                     var version = VersionController.Versions.FirstOrDefault(v => v.Version == customer.CurrentVersion);
